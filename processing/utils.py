@@ -1,7 +1,16 @@
 import numpy as np
+from processing.license_plate_detection import detection_license_plate
+from processing.license_plate_sing_recognitions import sign_recognitions
 
 
-def perform_processing(image: np.ndarray) -> str:
+def perform_processing(image: np.ndarray, chars_tamplate) -> str:
     print(f'image.shape: {image.shape}')
-    # TODO: add image processing here
+    char_images, char_paths = chars_tamplate
+    pts, image = detection_license_plate(image)
+    if pts is not None:
+        text = sign_recognitions(image, pts, char_images, char_paths)
+        if text is not None:
+            if len(text) > 7:
+                return text[:7]
+            return text
     return 'PO12345'
