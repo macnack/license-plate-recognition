@@ -1,15 +1,21 @@
 import cv2 as cv
 import numpy as np
-from processing.license_plate_detection import detection_license_plate
+from processing.license_plate_detection import detect_license_plate
 from processing.utils_cv import load_images, sort_points_by_corners
-# from license_plate_detection import detection_license_plate
+# from license_plate_detection import detect_license_plate
 # from utils_cv import load_images, sort_points_by_corners, show
 
 license_plate_shape = (512, 114)
 # char_paths = load_images("dane/fonts")
 # char_images = [cv.imread(char_path, cv.IMREAD_GRAYSCALE)
 #                 for char_path in char_paths]
-
+def convert_letters(string):
+    letters_changer = {'B': '8', 'D': '0', 'I': '1', 'O': '0', 'Z': '2'}
+    if len(string) < 3:
+        return string
+    else:
+        converted_string = string[:3] + ''.join(letters_changer.get(char, char) for char in string[3:])
+        return converted_string
 
 def create_license_plate_image(image, pts):
     # warp license plate contour to rectangle
@@ -66,6 +72,7 @@ def sign_recognitions(image, points, char_images, char_paths):
     if len(letters) > 0:
         letters = sorted(letters, key=lambda att: att[0])
         result = ''.join(item[1] for item in letters)
+        result = convert_letters(result)
         return result
 
 
@@ -77,7 +84,7 @@ def main():
                    for char_path in char_paths]
     for image_path in images_path:
         image = cv.imread(image_path, cv.IMREAD_COLOR)
-        pts, image = detection_license_plate(image)
+        pts, image = detect_license_plate(image)
         if pts is not None:
             text = sign_recognitions(image, pts, char_images, char_paths)
             # show(image)
