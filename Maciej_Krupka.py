@@ -20,7 +20,7 @@ def main():
     char_images = [cv2.imread(char_path, cv2.IMREAD_GRAYSCALE)
                     for char_path in char_paths]
 
-    images_paths = sorted([image_path for image_path in images_dir.iterdir() if image_path.name.endswith('.jpg')])
+    images_paths = sorted([image_path for image_path in images_dir.iterdir() if image_path.name.endswith('.jpg') or image_path.name.endswith('.JPG') ])
     results = {}
     for image_path in images_paths:
         image = cv2.imread(str(image_path))
