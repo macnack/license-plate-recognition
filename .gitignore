@@ -4,3 +4,4 @@ processing/miejsca.txt
 results.json
 results4.json
 .DS_Store
+*.pyc
