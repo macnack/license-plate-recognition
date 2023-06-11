@@ -2,20 +2,18 @@ import cv2 as cv
 import numpy as np
 from processing.license_plate_detection import detect_license_plate
 from processing.utils_cv import load_images, sort_points_by_corners
-# from license_plate_detection import detect_license_plate
-# from utils_cv import load_images, sort_points_by_corners, show
-
 license_plate_shape = (512, 114)
-# char_paths = load_images("dane/fonts")
-# char_images = [cv.imread(char_path, cv.IMREAD_GRAYSCALE)
-#                 for char_path in char_paths]
+
+
 def convert_letters(string):
     letters_changer = {'B': '8', 'D': '0', 'I': '1', 'O': '0', 'Z': '2'}
     if len(string) < 3:
         return string
     else:
-        converted_string = string[:3] + ''.join(letters_changer.get(char, char) for char in string[3:])
+        converted_string = string[:3] + \
+            ''.join(letters_changer.get(char, char) for char in string[3:])
         return converted_string
+
 
 def create_license_plate_image(image, pts):
     # warp license plate contour to rectangle
@@ -26,7 +24,7 @@ def create_license_plate_image(image, pts):
     return license_plate
 
 
-def sign_recognitions(image, points, char_images, char_paths):
+def sign_recognitions(image, points, char_images):
     # sorting points to top_left, top_right, bottom_left, bottom_right
     pts = sort_points_by_corners(points)
 
@@ -52,25 +50,36 @@ def sign_recognitions(image, points, char_images, char_paths):
         contour) > 100.0]
 
     letters = []
-    for idx_cnt, cnt in enumerate(contours):
-        x, y, w, h = cv.boundingRect(cnt)
-        if 0.2 < w/h < .8:
-            cv.drawContours(license_plate_org, contours,
-                            idx_cnt, color=(255, 0, 0), thickness=3)
-            license_plate_char = license_plate_closed_[y:y+h, x:x+w]
-            score = []
-            for id_char, char_image in enumerate(char_images):
-                char_image = cv.resize(char_image, (50, 50), cv.INTER_CUBIC)
-                license_plate_char = cv.resize(
-                    license_plate_char, (50, 50), cv.INTER_CUBIC)
-                res = cv.matchTemplate(
-                    char_image, license_plate_char, cv.TM_CCOEFF_NORMED)
-                score.append(res[0][0])
-            if len(score) > 0:
-                idx = np.argmax(score)
-                letters.append([x, char_paths[idx].rsplit("/")[-1][:-4]])
+    letters_bbox = [cv.boundingRect(cnt) for cnt in contours if 0.2 <= cv.boundingRect(
+        cnt)[2]/float(cv.boundingRect(cnt)[3]) <= 0.8]
+
+    letters_bbox = sorted(letters_bbox, key=lambda pose: pose[0])
+    for idx_lbbox, letter_bbox in enumerate(letters_bbox):
+        x, y, w, h = letter_bbox
+        license_plate_char = license_plate_closed_[y:y+h, x:x+w]
+        score = []
+        char_names = []
+        if idx_lbbox < 2:
+            offset = 10
+        else:
+            offset = 0
+        for char_image, char_name in char_images[offset:]:
+            char_image = cv.resize(char_image, (50, 50), cv.INTER_CUBIC)
+            license_plate_char = cv.resize(
+                license_plate_char, (50, 50), cv.INTER_CUBIC)
+            res = cv.matchTemplate(
+                char_image, license_plate_char, cv.TM_CCOEFF_NORMED)
+            score.append(res[0][0])
+            char_recognize = str(char_name.rsplit("/")[-1][:-4])
+            if len(char_recognize) > 1:
+                char_recognize = char_recognize[0]
+            char_names.append(char_recognize)
+        if len(score) > 0:
+            idx = np.argmax(score)
+            letters.append([x, char_names[idx]])
+    # show(license_plate_org)
+
     if len(letters) > 0:
-        letters = sorted(letters, key=lambda att: att[0])
         result = ''.join(item[1] for item in letters)
         result = convert_letters(result)
         return result
