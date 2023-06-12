@@ -3,7 +3,7 @@ import numpy as np
 from processing.license_plate_detection import detect_license_plate
 from processing.utils_cv import load_images, sort_points_by_corners
 license_plate_shape = (512, 114)
-
+from os.path import basename
 
 def convert_letters(string):
     letters_changer = {'B': '8', 'D': '0', 'I': '1', 'O': '0', 'Z': '2'}
@@ -70,8 +70,8 @@ def sign_recognitions(image, points, char_images):
             res = cv.matchTemplate(
                 char_image, license_plate_char, cv.TM_CCOEFF_NORMED)
             score.append(res[0][0])
-            char_recognize = str(char_name.rsplit("/")[-1][:-4])
-            if len(char_recognize) > 1:
+            filename_path = os.path.basename(char_name)
+            char_recognize = str(filename_path[:-4])            if len(char_recognize) > 1:
                 char_recognize = char_recognize[0]
             char_names.append(char_recognize)
         if len(score) > 0:
