@@ -9,7 +9,7 @@ def perform_processing(image: np.ndarray, chars_tamplate) -> str:
     if pts is not None:
         text = sign_recognitions(image, pts, chars_tamplate)
         if text is not None:
-            if len(text) > 7:
-                return text[:7]
+            if len(text) > 8:
+                return text[:8]
             return text
     return 'PO12345'
